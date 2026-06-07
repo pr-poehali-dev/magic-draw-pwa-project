@@ -7,6 +7,7 @@ export default {
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
+		"./1780843357708929980.html"
 	],
 	prefix: "",
 	theme: {
@@ -18,6 +19,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				fredoka: ['Fredoka', 'sans-serif'],
+				baloo: ['"Baloo 2"', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -61,29 +66,41 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				magic: {
+					pink: '#FF6B9D',
+					purple: '#A855F7',
+					blue: '#3B82F6',
+					cyan: '#06B6D4',
+					green: '#10B981',
+					yellow: '#F59E0B',
+					orange: '#F97316',
+					red: '#EF4444',
+					lilac: '#E879F9',
+					mint: '#34D399',
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				md: 'calc(var(--radius) - 4px)',
+				sm: 'calc(var(--radius) - 8px)',
+				'4xl': '2rem',
+				'5xl': '2.5rem',
+			},
+			boxShadow: {
+				'magic': '0 8px 32px rgba(255, 107, 157, 0.3)',
+				'magic-lg': '0 16px 48px rgba(168, 85, 247, 0.3)',
+				'bubble': '0 4px 24px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255,255,255,0.6)',
+				'candy': '0 6px 0 rgba(0,0,0,0.15)',
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				}
 			},
 			animation: {
