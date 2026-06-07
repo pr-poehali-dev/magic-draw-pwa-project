@@ -1,17 +1,43 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "@/lib/api";
+import { toast } from "sonner";
+
+const AVATARS = ["🦄", "🐸", "🐼", "🦊", "🐨", "🐯", "🦁", "🐙"];
+
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").replace(/^8/, "7").slice(0, 11);
+  if (!digits) return "";
+  let out = "+7";
+  if (digits.length > 1) out += " (" + digits.slice(1, 4);
+  if (digits.length >= 4) out += ") " + digits.slice(4, 7);
+  if (digits.length >= 7) out += "-" + digits.slice(7, 9);
+  if (digits.length >= 9) out += "-" + digits.slice(9, 11);
+  return out;
+}
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-
-  const AVATARS = ["🦄", "🐸", "🐼", "🦊", "🐨", "🐯", "🦁", "🐙"];
+  const [phone, setPhone] = useState("");
   const [avatar, setAvatar] = useState("🦄");
+  const [loading, setLoading] = useState(false);
 
-  const handleStart = () => {
-    navigate("/studio");
+  const phoneDigits = phone.replace(/\D/g, "");
+  const canSubmit = name.trim().length > 0 && phoneDigits.length >= 11;
+
+  const handleStart = async () => {
+    if (!canSubmit || loading) return;
+    setLoading(true);
+    try {
+      await login({ phone, child_name: name.trim(), avatar });
+      toast.success("Добро пожаловать! 🎉");
+      navigate("/studio");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось войти 🙏");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,41 +84,42 @@ export default function Auth() {
           <div className="text-center mb-6">
             <div className="text-6xl mb-3 animate-bounce-soft inline-block">{avatar}</div>
             <h2 className="font-fredoka text-3xl font-bold" style={{ color: "#A855F7" }}>
-              {mode === "login" ? "Добро пожаловать! 👋" : "Создай профиль! 🎉"}
+              Привет! 👋
             </h2>
+            <p className="font-fredoka text-base mt-1" style={{ color: "#9CA3AF" }}>
+              Создай свой волшебный профиль
+            </p>
           </div>
 
-          {/* Avatar picker (register only) */}
-          {mode === "register" && (
-            <div className="mb-5">
-              <p className="font-fredoka text-base font-semibold mb-2" style={{ color: "#6B21A8" }}>
-                Выбери аватар:
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                {AVATARS.map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => setAvatar(a)}
-                    className="text-3xl h-14 rounded-2xl transition-all duration-200 hover:scale-110"
-                    style={{
-                      background: avatar === a
-                        ? "linear-gradient(135deg, #FF6B9D, #A855F7)"
-                        : "rgba(168,85,247,0.1)",
-                      border: avatar === a ? "3px solid #FF6B9D" : "3px solid transparent",
-                      boxShadow: avatar === a ? "0 4px 12px rgba(255,107,157,0.5)" : "none",
-                    }}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
+          {/* Avatar picker */}
+          <div className="mb-5">
+            <p className="font-fredoka text-base font-semibold mb-2" style={{ color: "#6B21A8" }}>
+              Выбери аватар:
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => setAvatar(a)}
+                  className="text-3xl h-14 rounded-2xl transition-all duration-200 hover:scale-110"
+                  style={{
+                    background: avatar === a
+                      ? "linear-gradient(135deg, #FF6B9D, #A855F7)"
+                      : "rgba(168,85,247,0.1)",
+                    border: avatar === a ? "3px solid #FF6B9D" : "3px solid transparent",
+                    boxShadow: avatar === a ? "0 4px 12px rgba(255,107,157,0.5)" : "none",
+                  }}
+                >
+                  {a}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Name field */}
           <div className="mb-4">
             <label className="font-fredoka text-base font-semibold block mb-1.5" style={{ color: "#6B21A8" }}>
-              {mode === "register" ? "👤 Твоё имя:" : "👤 Имя:"}
+              👤 Имя ребёнка:
             </label>
             <input
               type="text"
@@ -100,76 +127,63 @@ export default function Auth() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Например: Маша"
               className="w-full font-fredoka text-lg px-4 py-3 rounded-2xl outline-none transition-all duration-200"
-              style={{
-                background: "#F9F0FF",
-                border: "3px solid #E9D5FF",
-                color: "#6B21A8",
-              }}
+              style={{ background: "#F9F0FF", border: "3px solid #E9D5FF", color: "#6B21A8" }}
               onFocus={(e) => { e.target.style.border = "3px solid #A855F7"; e.target.style.boxShadow = "0 0 0 4px rgba(168,85,247,0.15)"; }}
               onBlur={(e) => { e.target.style.border = "3px solid #E9D5FF"; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
-          {/* Age field (register only) */}
-          {mode === "register" && (
-            <div className="mb-4">
-              <label className="font-fredoka text-base font-semibold block mb-1.5" style={{ color: "#6B21A8" }}>
-                🎂 Сколько лет?
-              </label>
-              <div className="flex gap-2">
-                {[4, 5, 6, 7, 8, 9, 10].map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => setAge(String(a))}
-                    className="flex-1 font-fredoka text-lg font-bold h-12 rounded-2xl transition-all duration-200 hover:scale-105"
-                    style={{
-                      background: age === String(a)
-                        ? "linear-gradient(135deg, #FF6B9D, #A855F7)"
-                        : "#F9F0FF",
-                      color: age === String(a) ? "white" : "#A855F7",
-                      border: age === String(a) ? "3px solid #FF6B9D" : "3px solid #E9D5FF",
-                    }}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Phone field */}
+          <div className="mb-4">
+            <label className="font-fredoka text-base font-semibold block mb-1.5" style={{ color: "#6B21A8" }}>
+              📱 Телефон родителя:
+            </label>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              placeholder="+7 (___) ___-__-__"
+              className="w-full font-fredoka text-lg px-4 py-3 rounded-2xl outline-none transition-all duration-200"
+              style={{ background: "#F9F0FF", border: "3px solid #E9D5FF", color: "#6B21A8" }}
+              onFocus={(e) => { e.target.style.border = "3px solid #A855F7"; e.target.style.boxShadow = "0 0 0 4px rgba(168,85,247,0.15)"; }}
+              onBlur={(e) => { e.target.style.border = "3px solid #E9D5FF"; e.target.style.boxShadow = "none"; }}
+            />
+          </div>
 
           {/* Main button */}
           <button
             onClick={handleStart}
+            disabled={!canSubmit || loading}
             className="btn-magic w-full mt-6"
             style={{
-              background: "linear-gradient(135deg, #FF6B9D, #A855F7)",
-              boxShadow: "0 6px 0 #9c27b0, 0 10px 20px rgba(168,85,247,0.4)",
+              background: canSubmit
+                ? "linear-gradient(135deg, #FF6B9D, #A855F7)"
+                : "#E9D5FF",
+              boxShadow: canSubmit ? "0 6px 0 #9c27b0, 0 10px 20px rgba(168,85,247,0.4)" : "none",
               padding: "18px",
               borderRadius: "100px",
+              cursor: canSubmit && !loading ? "pointer" : "not-allowed",
             }}
           >
-            <span className="font-fredoka text-2xl font-bold text-white">
-              {mode === "login" ? "🚀 Вперёд!" : "🎉 Создать!"}
+            <span
+              className="font-fredoka text-2xl font-bold"
+              style={{ color: canSubmit ? "white" : "#C4B5FD" }}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-star-spin inline-block">⭐</span> Заходим...
+                </span>
+              ) : (
+                "🚀 Вперёд!"
+              )}
             </span>
           </button>
-
-          {/* Toggle mode */}
-          <div className="text-center mt-5">
-            <button
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="font-fredoka text-base font-semibold transition-all hover:scale-105"
-              style={{ color: "#A855F7" }}
-            >
-              {mode === "login"
-                ? "Первый раз? Создай профиль 🌟"
-                : "Уже есть? Войти 👋"}
-            </button>
-          </div>
         </div>
 
-        {/* Divider hint */}
-        <p className="font-fredoka text-center text-base mt-6 animate-bounce-soft" style={{ color: "#9CA3AF" }}>
-          Родителям не нужна почта — просто имя! 😊
+        {/* Hint */}
+        <p className="font-fredoka text-center text-sm mt-6 px-4" style={{ color: "#9CA3AF" }}>
+          📱 Номер нужен родителям для входа.<br />Если профиль уже есть — просто введите тот же номер 😊
         </p>
       </div>
     </div>

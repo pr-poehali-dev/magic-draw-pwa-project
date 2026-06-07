@@ -19,6 +19,8 @@ export default function Studio() {
   const [uploaded, setUploaded] = useState<string | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
   const [isMagicking, setIsMagicking] = useState(false);
+  const [magicApplied, setMagicApplied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [done, setDone] = useState(false);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,11 +29,23 @@ export default function Studio() {
     const reader = new FileReader();
     reader.onload = (ev) => setUploaded(ev.target?.result as string);
     reader.readAsDataURL(file);
+    setMagicApplied(false);
+    setDone(false);
   };
 
-  const handleMagic = async () => {
+  const handleMagic = () => {
     if (!uploaded || !selectedEffect) return;
     setIsMagicking(true);
+    setTimeout(() => {
+      setIsMagicking(false);
+      setMagicApplied(true);
+      toast.success("Магия применена! Теперь сохрани рисунок 🌟");
+    }, 2500);
+  };
+
+  const handleSave = async () => {
+    if (!uploaded || !selectedEffect || isSaving) return;
+    setIsSaving(true);
     const effectData = MAGIC_EFFECTS.find((e) => e.label === selectedEffect);
     try {
       await saveCreation({
@@ -40,11 +54,11 @@ export default function Studio() {
         effect: selectedEffect,
         emoji: effectData?.emoji || "🎨",
       });
-      setIsMagicking(false);
+      setIsSaving(false);
       setDone(true);
-      toast.success("Рисунок оживлён и сохранён! 🎉");
+      toast.success("Рисунок сохранён в галерею! 🎉");
     } catch (err) {
-      setIsMagicking(false);
+      setIsSaving(false);
       toast.error("Ой! Не получилось сохранить. Попробуй ещё раз 🙏");
     }
   };
@@ -204,10 +218,43 @@ export default function Studio() {
                 Колдую...
                 <span className="animate-star-spin inline-block" style={{ animationDirection: "reverse" }}>⭐</span>
               </span>
-            ) : done ? (
-              "🎉 Готово! Сохранить?"
+            ) : magicApplied ? (
+              "✨ Магия применена!"
             ) : (
               "🪄 Применить магию!"
+            )}
+          </span>
+        </button>
+
+        {/* Save button */}
+        <button
+          onClick={handleSave}
+          disabled={!magicApplied || isSaving || done}
+          className="btn-magic w-full"
+          style={{
+            background: magicApplied && !done
+              ? "linear-gradient(135deg, #10B981, #06B6D4)"
+              : "#D1FAE5",
+            boxShadow: magicApplied && !done
+              ? "0 8px 0 #047857, 0 12px 24px rgba(16,185,129,0.4)"
+              : "none",
+            padding: "20px",
+            borderRadius: "100px",
+            cursor: magicApplied && !done && !isSaving ? "pointer" : "not-allowed",
+          }}
+        >
+          <span
+            className="font-fredoka text-2xl font-bold"
+            style={{ color: magicApplied && !done ? "white" : "#6EE7B7" }}
+          >
+            {isSaving ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-star-spin inline-block">⭐</span> Сохраняю...
+              </span>
+            ) : done ? (
+              "✅ Сохранено!"
+            ) : (
+              "💾 Сохранить"
             )}
           </span>
         </button>
@@ -217,8 +264,8 @@ export default function Studio() {
             onClick={() => navigate("/gallery")}
             className="btn-magic w-full"
             style={{
-              background: "linear-gradient(135deg, #10B981, #06B6D4)",
-              boxShadow: "0 6px 0 #047857, 0 10px 24px rgba(16,185,129,0.4)",
+              background: "linear-gradient(135deg, #3B82F6, #A855F7)",
+              boxShadow: "0 6px 0 #6d28d9, 0 10px 24px rgba(59,130,246,0.4)",
               padding: "16px",
               borderRadius: "100px",
             }}

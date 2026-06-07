@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "POST invalid phone returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"phone": "123", "child_name": "Маша"},
+      "expectedStatus": 400
+    },
+    {
+      "name": "POST missing name returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"phone": "+79991234567", "child_name": ""},
+      "expectedStatus": 400
+    }
+  ]
+}
