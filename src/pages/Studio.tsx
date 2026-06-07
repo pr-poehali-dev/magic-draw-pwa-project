@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import { saveCreation } from "@/lib/api";
+import { toast } from "sonner";
 
 const MAGIC_EFFECTS = [
   { emoji: "🎭", label: "Анимация", color: "#FF6B9D", bg: "#FFE0F0" },
@@ -27,13 +29,24 @@ export default function Studio() {
     reader.readAsDataURL(file);
   };
 
-  const handleMagic = () => {
+  const handleMagic = async () => {
     if (!uploaded || !selectedEffect) return;
     setIsMagicking(true);
-    setTimeout(() => {
+    const effectData = MAGIC_EFFECTS.find((e) => e.label === selectedEffect);
+    try {
+      await saveCreation({
+        image_base64: uploaded,
+        title: "Мой рисунок",
+        effect: selectedEffect,
+        emoji: effectData?.emoji || "🎨",
+      });
       setIsMagicking(false);
       setDone(true);
-    }, 3000);
+      toast.success("Рисунок оживлён и сохранён! 🎉");
+    } catch (err) {
+      setIsMagicking(false);
+      toast.error("Ой! Не получилось сохранить. Попробуй ещё раз 🙏");
+    }
   };
 
   return (
